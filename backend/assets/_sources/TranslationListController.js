@@ -11,19 +11,58 @@ angular.module('BackendApp')
       $scope.languages = [];
       $scope.phrases = [];
 
-      $scope.save = function (category, phrase, variants) {
-        $http({
-          method: 'POST',
-          url: '/translation/api/save',
-          data: {
-            category: category,
-            phrase: phrase,
-            variants: variants
-          }
-        }).then(function (response) {
-          console.log(response.data);
-        });
+      var focus = {};
+      $scope.focus = function (phrase) {
+        focus[phrase] = true;
       };
+
+      $scope.isFullTranslatedPhrase = function (phrase, variants) {
+        var result = true;
+        angular.forEach(variants, function (item, key) {
+          if (
+            ($scope.filter.isAllLanguagesSelected() || $scope.filter.isLanguageSelect(key))
+            && (result && item === null)
+            || typeof focus[phrase] !== 'undefined') {
+            result = false;
+          }
+        });
+
+        return result;
+      };
+
+      $scope.save = function (e, category, phrase, variants, language) {
+        if (angular.element(e.target).hasClass('ng-dirty')) {
+          $http({
+            method: 'POST',
+            url: '/translation/api/save',
+            data: {
+              category: category,
+              phrase: phrase,
+              variants: variants
+            }
+          }).then(function (response) {
+            var key = buildResultKey(category, phrase, language);
+            saveResult[key] = response.data;
+            $timeout(function () {
+              delete saveResult[key];
+            }, 5000);
+          });
+        }
+      };
+
+      var saveResult = {};
+      $scope.saveResult = function (category, phrase, variants, language) {
+        var key = buildResultKey(category, phrase, language);
+
+        return {
+          success: saveResult[key] === true,
+          dander: saveResult[key] === false
+        };
+      };
+
+      function buildResultKey(category, phrase, language) {
+        return category + ':' + phrase + ':' + language;
+      }
 
       $http.reload = function () {
         $http({
@@ -32,8 +71,12 @@ angular.module('BackendApp')
         }).then(function (response) {
           $scope.languages = response.data.languages;
           $scope.phrases = response.data.items;
-          console.log($scope.languages);
-          console.log($scope.phrases);
+
+          angular.forEach($scope.phrases, function (phrases, dict) {
+            if ($scope.filter.selectedCategory === null) {
+              $scope.filter.setCategory(dict);
+            }
+          });
         });
       };
 
