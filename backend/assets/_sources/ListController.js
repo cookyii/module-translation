@@ -2,8 +2,8 @@
 
 angular.module('BackendApp')
 
-  .controller('TranslationListController', [
-    '$scope', '$timeout', '$http', 'FilterScope',
+  .controller('translation.ListController', [
+    '$scope', '$timeout', '$http', 'translation.FilterScope',
     function ($scope, $timeout, $http, FilterScope) {
 
       $scope.filter = FilterScope($scope);

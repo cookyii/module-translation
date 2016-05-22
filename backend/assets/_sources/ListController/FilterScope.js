@@ -2,7 +2,7 @@
 
 angular.module('BackendApp')
 
-  .service('FilterScope', [
+  .service('translation.FilterScope', [
     'QueryScope',
     function (QueryScope) {
       return function ($parentScope) {
